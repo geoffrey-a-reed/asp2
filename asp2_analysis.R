@@ -504,25 +504,22 @@ ttr_section <-
 ## @knitr declare_tidykwic
 #
 #
-tidykwic <- function(tbl, col, keywords, n = 5, to_lower = FALSE) {
+tidykwic <- function(tbl, col, keywords, n = 5) {
   enquo_col <- enquo(col)
   ngrams <-
     tbl %>%
-    unnest_tokens(
-      kwic,
-      !!enquo_col,
-      token = 'ngrams',
-      n = n,
-      to_lower = to_lower
-    )
+    unnest_tokens(kwic, !!enquo_col, token = 'ngrams', n = n)
   keywords %>%
     map_dfr(function(keyword) {
       pattern <-
         keyword %>%
-        str_c('^(?:\\w+\\s+){', n %/% 2, '}', .) %>%
+        str_c('^(?:\\w+\\W+){', n %/% 2, '}\\b', ., '\\b') %>%
         regex(ignore_case = TRUE)
       ngrams %>%
-        filter(kwic %>% str_detect(pattern)) %>%
+        filter(
+          kwic %>% is.na() %>% not(),
+          kwic %>% str_detect(pattern)
+        ) %>%
         mutate(keyword = keyword)
     })
 }
@@ -530,28 +527,24 @@ tidykwic <- function(tbl, col, keywords, n = 5, to_lower = FALSE) {
 
 
 ## @knitr kwic_hapax
-
+#
+#
 hapax_words_kwic <-
   sentences %>%
-  tidykwic(sentence, hapax_words, n = 5, to_lower = TRUE) %>%
-  arrange(keyword, sentence_num)
+  tidykwic(sentence, hapax_words)
 
+dis_words_kwic <-
+  sentences %>%
+  tidykwic(sentence, dis_words)
 
+tris_words_kwic <-
+  sentences %>%
+  tidykwic(sentence, tris_words)
 
-## @knitr extract_trigrams
-#
-#
+tetrakis_words_kwic <-
+  sentences %>%
+  tidykwic(sentence, tetrakis_words)
 # (End)
-
-
-## @knitr filter_legomenon
-#
-#
-words %>%
-  filter(str_detect('\\d+') %>% not()) %>%
-
-
-
 
 
 ## @knitr load_graphics_packages
