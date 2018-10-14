@@ -1,32 +1,29 @@
 ---
-title: "Analytic Story Page 2"
-subtitle: "To Be Determined"
-output:
+title: "Title"
+subtitle: "Subtitle"
+output: 
   word_document:
     reference_docx: "asp2_style_reference.docx"
-    
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+# One
+## Two
+### Three
+#### FOur
+##### Five
+###### Six
+
+```{R setup, echo = FALSE, cache = FALSE}
+knitr::opts_knit$set(eval.after = 'fig.cap')
+knitr::opts_chunk$set(echo = FALSE)
+knitr::read_chunk('asp2_analysis.R')
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r first, echo=FALSE}
+<<createVar>>
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r second}
+<<plotVar>>
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
