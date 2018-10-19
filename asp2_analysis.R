@@ -501,52 +501,6 @@ ttr_section <-
 # (End)
 
 
-## @knitr declare_tidykwic
-#
-#
-tidykwic <- function(tbl, col, keywords, n = 5) {
-  enquo_col <- enquo(col)
-  ngrams <-
-    tbl %>%
-    unnest_tokens(kwic, !!enquo_col, token = 'ngrams', n = n)
-  keywords %>%
-    map_dfr(function(keyword) {
-      pattern <-
-        keyword %>%
-        str_c('^(?:\\w+\\W+){', n %/% 2, '}\\b', ., '\\b') %>%
-        regex(ignore_case = TRUE)
-      ngrams %>%
-        filter(
-          kwic %>% is.na() %>% not(),
-          kwic %>% str_detect(pattern)
-        ) %>%
-        mutate(keyword = keyword)
-    })
-}
-# (End)
-
-
-## @knitr kwic_hapax
-#
-#
-hapax_words_kwic <-
-  sentences %>%
-  tidykwic(sentence, hapax_words)
-
-dis_words_kwic <-
-  sentences %>%
-  tidykwic(sentence, dis_words)
-
-tris_words_kwic <-
-  sentences %>%
-  tidykwic(sentence, tris_words)
-
-tetrakis_words_kwic <-
-  sentences %>%
-  tidykwic(sentence, tetrakis_words)
-# (End)
-
-
 ## @knitr load_graphics_packages
 #
 #
@@ -560,6 +514,17 @@ suppressPackageStartupMessages({
 })
 # (End)
 
+
+## @knitr correlation
+#
+#
+ttr_length_corr <-
+  ttr_words_by_chapter %>%
+  summarize(corr = cor(word_count, ttr_word)) %>%
+  pull(corr) %>%
+  abs() %>%
+  percent()
+# (End)
 
 ## @knitr declare_fonts
 #
@@ -626,3 +591,127 @@ desaturate = function(colors, ds=0.4, dv=0.7) {
 # (End)
 
 
+## @knitr create_zipf_plot
+#
+#
+zipfs_law_plot <-
+  words %>%
+  group_by(word) %>%
+  summarize(count = n()) %>%
+  ungroup() %>%
+  mutate(total = n()) %>%
+  group_by(word) %>%
+  summarize(freq = count / total) %>%
+  ungroup() %>%
+  arrange(freq %>% desc()) %>%
+  mutate(step_rank = freq %>% dense_rank()) %>%
+  ungroup() %>%
+  mutate(
+    rank = row_number(),
+    color_rank =
+      case_when(
+        step_rank == min(step_rank) ~ 'Hapax Legomenon',
+        step_rank == min(step_rank) + 1 ~ 'Dis Legomenon',
+        step_rank == min(step_rank) + 2 ~ 'Tris Legomenon',
+        step_rank == min(step_rank) + 3 ~ 'Tetrakis Legomenon',
+        TRUE ~ '(more frequent)'
+      ) %>% factor(levels = c(
+        '(more frequent)',
+        'Tetrakis Legomenon',
+        'Tris Legomenon',
+        'Dis Legomenon',
+        'Hapax Legomenon'
+      )),
+    label_rank = if_else(step_rank > max(step_rank) - 4, word, NA_character_)
+  ) %>%
+  ggplot(aes(x = rank, y = freq, color = color_rank)) +
+  geom_point(size = 2) +
+  geom_text(
+    aes(label = label_rank),
+    vjust = -0.3,
+    hjust = -1,
+    show.legend = FALSE,
+    na.rm = TRUE
+  ) +
+  scale_x_log10(name = 'Rank') +
+  scale_y_log10(name = 'Frequency',) +
+  scale_color_manual(
+    name = NULL,
+    values = docx_colors[c(1, 7:10)] %>% unname()
+  ) +
+  ggtitle(label = 'Zipf\'s Law') +
+  theme_cowplot() +
+  theme(
+    text = element_text(family = docx_fonts['body']),
+    title = element_text(family = docx_fonts['headings']),
+    legend.position = c(0.05, 0.2)
+  )
+# (End)
+
+
+## @knitr create_ttr_plot
+#
+#
+ttr_plot <-
+  ttr_chapter %>%
+  ggplot(aes(x = chapter_num, y = ttr_word)) +
+  geom_hline(aes(yintercept = mean(ttr_word))) +
+  geom_segment(
+    aes(xend = chapter_num, yend = mean(ttr_word)),
+    size = 1
+  ) +
+  geom_text(
+    aes(x = chapter_num, y = ttr_word, label = chapter_num),
+    vjust = 0.5,
+    hjust = -1
+  ) +
+  geom_point(size = 2, color = docx_colors['accent1']) +
+  ggtitle(label = 'Type-Token Ration') +
+  annotate('text', x = 6.5, y = .29, label = 'Mean TTR') +
+  scale_x_continuous(name = 'Chapter') +
+  scale_y_continuous(name = 'TTR') +
+  theme_cowplot() +
+  theme(
+    text = element_text(family = docx_fonts['body']),
+    title = element_text(family = docx_fonts['headings']),
+    axis.line = element_blank(),
+    panel.border = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text.x = element_blank()
+  )
+# (End)
+
+
+## @knitr create_freq_plot
+#
+#
+word_freq_plot <-
+  word_counts_nostop %>%
+  mutate(total = n(), freq = count / total) %>%
+  arrange(freq %>% desc()) %>%
+  mutate(word = reorder(word, freq)) %>%
+  slice(1:5) %>%
+  ggplot(aes(x = word)) +
+  geom_segment(aes(xend = word, y = 0, yend = freq), size = 1) +
+  geom_point(aes(y = freq), size = 2) +
+  coord_flip() +
+  ggtitle('Word Frequencies') +
+  scale_y_continuous(labels = percent_format(accuracy = 0.1)) +
+  theme_cowplot() +
+  theme(axis.title = element_blank(), axis.ticks = element_blank(),
+        axis.line = element_blank(),
+        axis.text = element_text(family = docx_fonts['body']),
+        title = element_text(family = docx_fonts['header']))
+# (End)
+
+
+## @knitr bind_plots
+#
+#
+plots <-
+  plot_grid(
+    plot_grid(word_freq_plot, ttr_plot, ncol = 1, rel_heights = c(0.35, 0.75)),
+    zipfs_law_plot,
+    nrow = 1
+  )
+# (End)

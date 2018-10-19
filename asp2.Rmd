@@ -1,17 +1,11 @@
 ---
-title: "Title"
-subtitle: "Subtitle"
+title: "Unremarkable Reflections"
+subtitle: "The Bland Apologia of Rockefeller's *Random Reminiscences of Men and Events*"
 output: 
   word_document:
     reference_docx: "asp2_style_reference.docx"
 ---
 
-# One
-## Two
-### Three
-#### FOur
-##### Five
-###### Six
 
 ```{R setup, echo = FALSE, cache = FALSE}
 knitr::opts_knit$set(eval.after = 'fig.cap')
@@ -19,11 +13,72 @@ knitr::opts_chunk$set(echo = FALSE)
 knitr::read_chunk('asp2_analysis.R')
 ```
 
-```{r first, echo=FALSE}
-<<createVar>>
+
+```{r analysis}
+<<load_analysis_packages>>
+<<load_stopwords>>
+<<read_and_preprocess_text>>
+<<extract_chapters>>
+<<extract_sections>>
+<<extract_paragraphs>>
+<<extract_sentences>>
+<<extract_tokens>>
+<<count_tokens>>
+<<extract_hapax>>
+<<type_token_ratio>>
 ```
 
-```{r second}
-<<plotVar>>
+```{r graphics}
+<<load_graphics_packages>>
+<<declare_fonts>>
+<<load_and_check_system_fonts>>
+<<load_and_check_windows_fonts>>
+<<declare_colors>>
+<<declare_desaturation_function>>
+<<create_zipf_plot>>
+<<create_ttr_plot>>
+<<create_freq_plot>>
+<<bind_plots>>
+<<correlation>>
 ```
 
+
+That a man of John D. Rockefeller's achievements should write memoirs is
+unremarkable. The tone of the memoirs themselves, however, stands in stark 
+contrast to the extraordinary contours of Rockefeller's life. It is colorless,
+anodyne---almost affable---in its treatment of his past.
+
+Rockefeller takes great pains to defend himself against accusations of
+questionable business practices: In fact, his strident support for honesty
+and fair dealing---and his later concern for philanthropy---stand out in
+the text. His belt-and-braces approach to his own defense does seem more at
+home in a modern media campaign than a 19^th^ century autobiography, though:
+Perhaps his accusers are mistaken? Or jealous? Perhaps some underling acted
+without his knowledge? Perhaps the harm done was not so great after all? One
+wonders if the first luxury Rockefeller might have afforded was an affected
+ignorance of the grittier aspects of his own business empire. One might also
+speculate that his obsession with honesty---and defensiveness about the
+means used to accumulate his wealth---stems from the reputation of his father, 
+he being the only individual in these memoirs for whom Rockefeller has
+anything but kind words.
+
+Frequency analysis easily reveals the basic subject matter of Rockefeller's
+work: "Business," "great," "oil," "money," and "men," with his own
+"Standard Oil Company" being the most frequent trigram.[^1] Unfortunately this
+is not enormously enlightening. A cursory examination of Rockefeller's life
+might lead anyone to the same conclusion. Analysis of the Type-Token Ratio
+is equally frustrating, as the majority of its variation is explained merely
+by the length of the text.[^2] A simple reading of Rockefeller's work appears
+more revealing than quantitative analysis.
+
+
+```{r plot, fig.width=10, fig.height=5, dpi=600, fig.cap=caption}
+caption <- str_c('Word frequencies are calculated after SMART stopword ',
+                 'removal. The distribution of unfiltered words by contrast ',
+                 'closely follows Zipf\'s Law.')
+plots
+```
+
+[^1]: Word frequencies are calculated after removal of SMART stopwords
+[^2]: Chapter length explains `r ttr_length_corr` of the variation in
+      Type-Token Ratio
